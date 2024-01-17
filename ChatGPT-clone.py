@@ -1,16 +1,28 @@
+# Code refactored from https://docs.streamlit.io/knowledge-base/tutorials/build-conversational-apps
 import streamlit as st
-from openai import OpenAI
+import openai
 
-# App title
-st.title("ChatGPT clone")
+# Set up Streamlit sidebar with app title and API key input
+with st.sidebar:
+    st.title('🤖💬 OpenAI Chatbot')
 
-# Set client OpenAI API key
-client = OpenAI(api_key = st.secrets["OPENAI_API_KEY"])
+    # Check if API key is already provided in Streamlit secrets
+    if 'OPENAI_API_KEY' in st.secrets:
+        st.success('API key already provided!', icon='✅')
+        openai.api_key = st.secrets['OPENAI_API_KEY']
+    else:
+        # If API key is not provided, prompt user to enter it
+        openai.api_key = st.text_input(
+            'Enter your OpenAI API key:', type='password')
 
-# Initialize default session state
-if "openai_model" not in st.session_state:
-    st.session_state["openai_model"] = "gpt-3.5-turbo"
+        # Validate the format of the entered API key
+        if not (openai.api_key.startswith('sk-') and len(openai.api_key) == 51):
+            st.warning('Please enter a valid API key!', icon='⚠️')
+        else:
+            # If valid API key, indicate success and prompt for chat message
+            st.success('Proceed to entering your prompt message!', icon='👉')
 
+# Initialize session state to store chat messages
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -32,16 +44,12 @@ if prompt := st.chat_input("Message OpenAI chatbot..."):
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
         full_response = ""
-        for response in client.chat.completions.create(
-            model = st.session_state["openai_model"],
-            messages = [
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ],
-            stream = True,
-        ):
+        for response in openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": m["role"], "content": m["content"]}
+                      for m in st.session_state.messages], stream=True):
             # Update the assistant's response dynamically as it comes in
-            full_response += (response.choices[0].delta.content or "")
+            full_response += response.choices[0].delta.get("content", "")
             message_placeholder.markdown(full_response + "▌")
         # Display the final assistant's response
         message_placeholder.markdown(full_response)
