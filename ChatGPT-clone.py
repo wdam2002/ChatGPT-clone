@@ -22,11 +22,14 @@ with st.sidebar:
             # If valid API key, indicate success and prompt for chat message
             st.success('Proceed to entering your prompt message!', icon='👉')
 
-# Initialize session state to store chat messages
+# Initialize default session state
+if "openai_model" not in st.session_state:
+    st.session_state["openai_model"] = "gpt-3.5-turbo"
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display previous chat message history
+# Display previous chat messages history
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
@@ -44,12 +47,16 @@ if prompt := st.chat_input("Message OpenAI chatbot..."):
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
         full_response = ""
-        for response in openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": m["role"], "content": m["content"]}
-                      for m in st.session_state.messages], stream=True):
+        for response in openai.chat.completions.create(
+            model=st.session_state["openai_model"],
+            messages=[
+                {"role": m["role"], "content": m["content"]}
+                for m in st.session_state.messages
+            ],
+            stream=True,
+        ):
             # Update the assistant's response dynamically as it comes in
-            full_response += response.choices[0].delta.get("content", "")
+            full_response += (response.choices[0].delta.content or "")
             message_placeholder.markdown(full_response + "▌")
         # Display the final assistant's response
         message_placeholder.markdown(full_response)
