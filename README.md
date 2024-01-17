@@ -2,6 +2,15 @@
 
 A ChatGPT clone app built using the Streamlit Python library and the OpenAI GPT-3.5 model.
 
+## Demo App
+
+Add your OpenAI API key to Streamlit secrets by creating .streamlit/secrets.toml file in the project directory and adding the following lines to it
+```
+# .streamlit/secrets.toml
+OPENAI_API_KEY = "YOUR_API_KEY"
+```
+Or input your own OpenAI API key in the sidebar of the app.
+
 ## Get an OpenAI API key
 
 You can get your own OpenAI API key by doing the following:
